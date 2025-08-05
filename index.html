@@ -14,13 +14,22 @@ layout: default
   <h1>Pages disponibles</h1>
   <ul>
     {%- for page in site.pages -%}
+    {%- assign dir_parts = page.dir | split: "/" | reject: "" -%}
     {%- assign is_html_root = page.dir == "/" and page.name != "index.html" and page.name contains ".html" -%}
-    {%- assign is_subsite = (page.name == "index.md" or page.name == "index.html") and page.dir != "/" and page.dir
-    contains "/" == false -%}
+    {%- assign is_subsite = (page.name == "index.md" or page.name == "index.html")
+    and dir_parts.size == 1
+    and dir_parts[0] != "assets"
+    and dir_parts[0] != "_site"
+    and dir_parts[0] != "_layouts"
+    and dir_parts[0] != "_includes"
+    and dir_parts[0] != "_sass"
+    and dir_parts[0] != "vendor"
+    and dir_parts[0] != "node_modules"
+    -%}
     {%- if is_html_root -%}
     <li><a href="{{ page.url }}">{{ page.name }}</a></li>
     {%- elsif is_subsite -%}
-    <li><a href="{{ page.url }}">{{ page.dir | remove: "/" }}</a></li>
+    <li><a href="{{ page.url }}">{{ dir_parts[0] | capitalize }}</a></li>
     {%- endif -%}
     {%- endfor -%}
   </ul>
