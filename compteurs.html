@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compte à Rebours Dynamique</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #2c3e50; /* Couleur de fond sombre */
+            color: #ecf0f1;
+            overflow: hidden; /* Empêche le défilement */
+        }
+
+        #container {
+            display: grid;
+            gap: 20px;
+            padding: 20px;
+            width: 100%;
+            height: 100vh;
+            box-sizing: border-box;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Colonnes automatiques */
+            grid-auto-rows: minmax(200px, 1fr); /* Lignes automatiques */
+            align-items: center;
+            justify-content-items: center;
+        }
+
+        .countdown-module {
+            background-color: #34495e;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            box-sizing: border-box;
+            transition: all 0.3s ease-in-out;
+            min-height: 150px; /* Taille minimale pour ne pas trop rétrécir */
+            min-width: 250px;
+            overflow: hidden; /* Pour la jauge */
+        }
+
+        .countdown-module.flashing {
+            animation: flashRed 1s infinite alternate;
+        }
+
+        @keyframes flashRed {
+            from { background-color: #e74c3c; }
+            to { background-color: #34495e; }
+        }
+
+        .module-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .module-header input[type="text"] {
+            background-color: #4a667b;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #ecf0f1;
+            font-size: 1.1em;
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            font-size: 1.8em;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 5px;
+            transition: color 0.2s ease;
+        }
+        .close-btn:hover {
+            color: #c0392b;
+        }
+
+        .timer-display {
+            /* Agrandissement du compteur numérique */
+            font-size: 12em; /* Taille plus grande */
+            font-weight: bold;
+	    color: rgba(255, 255, 255, 0.8);
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            margin: 10px 0;
+            white-space: nowrap; /* Empêche le retour à la ligne */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1;
+            flex-grow: 1; /* Permet au timer de prendre plus de place */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-bar-container {
+            width: 90%;
+            height: 35px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%; /* Démarre plein */
+            background-image: linear-gradient(to right, #e74c3c, #f1c40f, #2ecc71); /* Dégradé rouge-jaune-vert */
+            transition: width 0.5s linear; /* Transition plus douce */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .progress-bar.custom-image {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-image: none !important; /* Annule le dégradé */
+        }
+
+        .module-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            width: 100%;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .module-controls input[type="number"] {
+            width: 70px;
+            background-color: #4a667b;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #ecf0f1;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+            font-size: 4em;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .control-btn:hover {
+            color: #2980b9;
+        }
+
+        .add-module-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            font-size: 3em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            z-index: 1000;
+        }
+        .add-module-btn:hover {
+            background-color: #27ae60;
+            transform: scale(1.05);
+        }
+
+        .image-selector-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px; /* Espacement après les contrôles */
+            margin-bottom: 10px;
+        }
+
+        .image-selector-group label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .image-selector-group select {
+            background-color: #4a667b;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: #ecf0f1;
+            font-size: 0.9em;
+            cursor: pointer;
+            max-width: 300px; /* Limite la largeur du select */
+        }
+
+        /* Styles pour gérer le redimensionnement - SIMPLIFIÉ ET AMÉLIORÉ */
+        #container {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Maintenir des colonnes flexibles */
+            grid-auto-rows: minmax(250px, 1fr); /* Augmenter la taille minimale des lignes */
+        }
+
+        /* Quand il y a peu de modules, ils peuvent s'étirer davantage */
+        #container[data-modules="1"] .countdown-module {
+            height: auto; /* Laisser la hauteur s'ajuster */
+        }
+        #container[data-modules="1"] .timer-display { font-size: 18em; } /* Encore plus grand pour un seul module */
+
+        /* Redimensionnement général pour maintenir la lisibilité */
+        .countdown-module {
+            font-size: 1em; /* Taille de base pour les éléments textuels */
+        }
+        .countdown-module .timer-display {
+            font-size: 12em; /* Maintenir une bonne taille de base pour le timer */
+        }
+        .countdown-module .module-header input {
+            font-size: 1.1em;
+        }
+        .countdown-module .module-controls input {
+            font-size: 2em;
+        }
+        .countdown-module .control-btn {
+            font-size: 4em;
+        }
+        .countdown-module .close-btn {
+            font-size: 1.8em;
+        }
+
+
+        /* Media queries pour s'adapter aux écrans plus petits */
+        @media (max-width: 768px) {
+            #container {
+                grid-template-columns: 1fr; /* Une seule colonne sur petits écrans */
+                grid-auto-rows: minmax(200px, 1fr); /* Ajuster la hauteur des lignes */
+            }
+            .countdown-module {
+                width: 95% !important; /* Prends plus de largeur */
+                padding: 15px;
+            }
+            .timer-display {
+                font-size: 4em !important; /* Ajuster pour les petits écrans */
+            }
+            .module-header input {
+                font-size: 1em !important;
+            }
+            .control-btn {
+                font-size: 1.8em !important;
+            }
+            .close-btn {
+                font-size: 1.5em !important;
+            }
+            .add-module-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 2.5em;
+                bottom: 20px;
+                right: 20px;
+            }
+            .image-selector-group select {
+                max-width: 120px; /* Plus petit sur mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="container">
+        </div>
+
+    <button id="addModuleBtn" class="add-module-btn">+</button>
+
+    <script>
+        const container = document.getElementById('container');
+        const addModuleBtn = document.getElementById('addModuleBtn');
+        let moduleCounter = 0;
+
+        // Noms de fichiers d'images prédéfinis pour la jauge
+        const predefinedGaugeImages = [
+            'Aucune (dégradé par défaut)', // Option pour le dégradé
+	    'Lueur verte',
+            'image1.png',
+            'image2.jpg',
+            'image3.gif',
+            'image4.svg',
+            'image5.webp',
+            'image6.png',
+            'image7.jpg',
+            'image8.gif',
+            'image9.svg',
+            'image10.webp'
+        ];
+
+        // Noms de fichiers d'images prédéfinis pour le fond des modules
+        const predefinedBackgroundImages = [
+            'Aucune (couleur par défaut)', // Option pour la couleur de fond par défaut
+            'background1.jpg',
+            'background2.jpg',
+            'background3.jpg',
+            'background4.jpg',
+            'background5.jpg',
+            'background6.jpg',
+            'background7.jpg',
+            'background8.jpg',
+            'background9.jpg',
+            'background10.jpg'
+        ];
+
+
+        function createCountdownModule() {
+            moduleCounter++;
+            const moduleId = `countdown-${moduleCounter}`;
+
+            const moduleDiv = document.createElement('div');
+            moduleDiv.className = 'countdown-module';
+            moduleDiv.id = moduleId;
+            moduleDiv.dataset.initialMinutes = 55;
+            moduleDiv.dataset.remainingTime = 55 * 60 * 1000; // En millisecondes
+            moduleDiv.dataset.isRunning = 'false';
+            moduleDiv.dataset.intervalId = null;
+
+            moduleDiv.innerHTML = `
+                <div class="module-header">
+                    <input type="text" value="Mon Compteur ${moduleCounter}" class="module-title-input">
+                    <button class="close-btn">&times;</button>
+                </div>
+                <div class="timer-display">55:00</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar"></div>
+                </div>
+                <div class="module-controls">
+                    <input type="number" value="55" min="1" class="minutes-input">
+                    <button class="control-btn play-pause-btn">&#9658;</button>
+                    <button class="control-btn reset-btn">&#8635;</button>
+                </div>
+                <div class="image-selector-group">
+                    <label for="gauge-image-select-${moduleId}">Jauge Image :</label>
+                    <select id="gauge-image-select-${moduleId}" class="gauge-image-select"></select>
+                </div>
+                <div class="image-selector-group">
+                    <label for="background-image-select-${moduleId}">Fond Module :</label>
+                    <select id="background-image-select-${moduleId}" class="background-image-select"></select>
+                </div>
+            `;
+
+            container.appendChild(moduleDiv);
+
+            const titleInput = moduleDiv.querySelector('.module-title-input');
+            const minutesInput = moduleDiv.querySelector('.minutes-input');
+            const timerDisplay = moduleDiv.querySelector('.timer-display');
+            const playPauseBtn = moduleDiv.querySelector('.play-pause-btn');
+            const resetBtn = moduleDiv.querySelector('.reset-btn');
+            const closeBtn = moduleDiv.querySelector('.close-btn');
+            const progressBar = moduleDiv.querySelector('.progress-bar');
+            const gaugeImageSelect = moduleDiv.querySelector('.gauge-image-select');
+            const backgroundImageSelect = moduleDiv.querySelector('.background-image-select'); // Nouveau sélecteur
+
+            // Populate gauge image selector
+            predefinedGaugeImages.forEach(imageName => {
+                const option = document.createElement('option');
+                option.value = imageName;
+                option.textContent = imageName.replace('.png', '').replace('.jpg', '').replace('.gif', '').replace('.svg', '').replace('.webp', '');
+                if (imageName === 'Aucune (dégradé par défaut)') {
+                    option.selected = true;
+                }
+                gaugeImageSelect.appendChild(option);
+            });
+
+            // Populate background image selector
+            predefinedBackgroundImages.forEach(imageName => {
+                const option = document.createElement('option');
+                option.value = imageName;
+                option.textContent = imageName.replace('.png', '').replace('.jpg', '').replace('.gif', '').replace('.svg', '').replace('.webp', '');
+                if (imageName === 'Aucune (couleur par défaut)') {
+                    option.selected = true;
+                }
+                backgroundImageSelect.appendChild(option);
+            });
+
+            // Initial setup for the progress bar (full width)
+            progressBar.style.width = '100%';
+
+            // Event Listeners
+            minutesInput.addEventListener('change', () => {
+                const newMinutes = parseInt(minutesInput.value);
+                if (isNaN(newMinutes) || newMinutes <= 0) {
+                    minutesInput.value = moduleDiv.dataset.initialMinutes; // Reset to initial if invalid
+                    return;
+                }
+                moduleDiv.dataset.initialMinutes = newMinutes;
+                moduleDiv.dataset.remainingTime = newMinutes * 60 * 1000;
+                updateDisplay(moduleDiv);
+                resetProgressBar(moduleDiv);
+            });
+
+            playPauseBtn.addEventListener('click', () => {
+                toggleTimer(moduleDiv);
+            });
+
+            resetBtn.addEventListener('click', () => {
+                resetTimer(moduleDiv);
+            });
+
+            closeBtn.addEventListener('click', () => {
+                clearInterval(parseInt(moduleDiv.dataset.intervalId));
+                moduleDiv.remove();
+                updateContainerGrid();
+            });
+
+            gaugeImageSelect.addEventListener('change', () => {
+                const selectedImage = gaugeImageSelect.value;
+                if (selectedImage === 'Aucune (dégradé par défaut)') {
+                    progressBar.classList.remove('custom-image');
+                    progressBar.style.backgroundImage = 'linear-gradient(to right, #e74c3c, #f1c40f, #2ecc71)';
+                } else { if (selectedImage === 'Lueur verte') {
+                    progressBar.classList.remove('custom-image');
+                    progressBar.style.backgroundImage = 'radial-gradient(circle at center,#ffffff 0%,#00ff00 20%,rgba(0, 255, 0, 0.7) 60%,rgba(0, 255, 0, 0) 100%)';
+                } else {
+                    progressBar.classList.add('custom-image');
+                    progressBar.style.backgroundImage = `url('${selectedImage}')`;
+                }}
+            });
+
+            // Nouveau gestionnaire d'événement pour le sélecteur d'image de fond de module
+            backgroundImageSelect.addEventListener('change', () => {
+                const selectedImage = backgroundImageSelect.value;
+                if (selectedImage === 'Aucune (couleur par défaut)') {
+                    moduleDiv.style.backgroundImage = 'none';
+                    moduleDiv.style.backgroundColor = '#34495e'; // Remet la couleur par défaut
+                    moduleDiv.style.backgroundSize = '';
+                    moduleDiv.style.backgroundPosition = '';
+                    moduleDiv.style.backgroundRepeat = '';
+                } else {
+                    moduleDiv.style.backgroundImage = `url('${selectedImage}')`;
+                    moduleDiv.style.backgroundColor = 'transparent'; // Pour que l'image soit visible
+                    moduleDiv.style.backgroundSize = 'cover';
+                    moduleDiv.style.backgroundPosition = 'center';
+                    moduleDiv.style.backgroundRepeat = 'no-repeat';
+                }
+            });
+
+            // Initial display update
+            updateDisplay(moduleDiv);
+            updateContainerGrid();
+        }
+
+        function toggleTimer(moduleDiv) {
+            if (moduleDiv.dataset.isRunning === 'true') {
+                // Pause
+                clearInterval(parseInt(moduleDiv.dataset.intervalId));
+                moduleDiv.dataset.isRunning = 'false';
+                moduleDiv.querySelector('.play-pause-btn').innerHTML = '&#9658;'; // Play icon
+            } else {
+                // Start / Resume
+                if (parseInt(moduleDiv.dataset.remainingTime) <= 0) {
+                    // If already finished, reset first
+                    resetTimer(moduleDiv);
+                }
+                moduleDiv.dataset.isRunning = 'true';
+                moduleDiv.querySelector('.play-pause-btn').innerHTML = '&#10074;&#10074;'; // Pause icon
+                const startTime = Date.now();
+                const initialRemaining = parseInt(moduleDiv.dataset.remainingTime);
+
+                const intervalId = setInterval(() => {
+                    const elapsed = Date.now() - startTime;
+                    const newRemaining = initialRemaining - elapsed;
+                    moduleDiv.dataset.remainingTime = newRemaining;
+
+                    updateDisplay(moduleDiv);
+                    updateProgressBar(moduleDiv);
+                    checkFlashing(moduleDiv);
+
+                    if (newRemaining <= 0) {
+                        clearInterval(intervalId);
+                        moduleDiv.dataset.isRunning = 'false';
+                        moduleDiv.querySelector('.play-pause-btn').innerHTML = '&#9658;'; // Play icon
+                        moduleDiv.querySelector('.timer-display').textContent = '00:00'; // Utiliser querySelector pour le timerDisplay
+                        moduleDiv.classList.remove('flashing'); // Arrête le clignotement
+                        // Optionnel: ajouter une alerte ou un son ici
+                    }
+                }, 100); // Mettre à jour plus fréquemment pour une meilleure fluidité de la jauge et du clignotement
+
+                moduleDiv.dataset.intervalId = intervalId.toString();
+            }
+        }
+
+        function resetTimer(moduleDiv) {
+            clearInterval(parseInt(moduleDiv.dataset.intervalId));
+            moduleDiv.dataset.isRunning = 'false';
+            moduleDiv.dataset.remainingTime = parseInt(moduleDiv.dataset.initialMinutes) * 60 * 1000;
+            moduleDiv.querySelector('.play-pause-btn').innerHTML = '&#9658;'; // Play icon
+            updateDisplay(moduleDiv);
+            resetProgressBar(moduleDiv);
+            moduleDiv.classList.remove('flashing'); // Arrête le clignotement
+        }
+
+        function updateDisplay(moduleDiv) {
+            const timerDisplay = moduleDiv.querySelector('.timer-display');
+            const remainingTime = parseInt(moduleDiv.dataset.remainingTime);
+            const totalSeconds = Math.max(0, Math.floor(remainingTime / 1000));
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgressBar(moduleDiv) {
+            const progressBar = moduleDiv.querySelector('.progress-bar');
+            const initialMinutes = parseInt(moduleDiv.dataset.initialMinutes);
+            const remainingTime = parseInt(moduleDiv.dataset.remainingTime);
+            const totalDurationMs = initialMinutes * 60 * 1000;
+
+            const percentage = (remainingTime / totalDurationMs) * 100;
+            progressBar.style.width = `${Math.max(0, percentage)}%`;
+
+            // Adjust background image position for the default gradient if no custom image
+            if (!progressBar.classList.contains('custom-image')) {
+                // Le dégradé linéaire sera coupé par le width.
+                // Le dégradé actuel va de rouge à vert. Quand le temps s'écoule, width diminue.
+                // Donc le vert à droite sera le premier à disparaître. C'est déjà bon.
+            }
+        }
+
+        function resetProgressBar(moduleDiv) {
+            const progressBar = moduleDiv.querySelector('.progress-bar');
+            progressBar.style.width = '100%';
+        }
+
+        function checkFlashing(moduleDiv) {
+            const remainingTimeMs = parseInt(moduleDiv.dataset.remainingTime);
+            const remainingMinutes = Math.floor(remainingTimeMs / (1000 * 60));
+            const remainingSeconds = Math.floor((remainingTimeMs % (1000 * 60)) / 1000);
+
+            if (remainingMinutes < 15 && remainingMinutes >= 5) { // Dernier quart d'heure (15 min à 5 min)
+                if (remainingSeconds % 300 === 0) { // Toutes les 5 minutes (en secondes) - 300s = 5min
+                    moduleDiv.classList.add('flashing');
+                    setTimeout(() => moduleDiv.classList.remove('flashing'), 1000); // Clignote une seconde
+                }
+            } else if (remainingMinutes < 5 && remainingMinutes >= 0) { // 5 dernières minutes
+                if (remainingSeconds % 60 === 0) { // Toutes les minutes (en secondes) - 60s = 1min
+                    moduleDiv.classList.add('flashing');
+                    setTimeout(() => moduleDiv.classList.remove('flashing'), 1000); // Clignote une seconde
+                }
+            } else {
+                moduleDiv.classList.remove('flashing');
+            }
+        }
+
+        function updateContainerGrid() {
+            const numModules = container.children.length;
+            container.dataset.modules = numModules;
+
+            // La logique CSS gère le redimensionnement
+            // grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            // grid-auto-rows: minmax(200px, 1fr);
+            // Les media queries et les sélecteurs data-modules gèrent les tailles spécifiques
+        }
+
+        addModuleBtn.addEventListener('click', createCountdownModule);
+
+        // Crée un module au chargement de la page pour commencer
+        createCountdownModule();
+
+    </script>
+</body>
+</html>
