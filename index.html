@@ -14,10 +14,9 @@ layout: default
   <h1>Pages disponibles</h1>
   <ul>
     {%- for page in site.pages -%}
-    {%- assign dir_parts = page.dir | split: "/" | reject: "" -%}
-    {%- assign is_html_root = page.dir == "/" and page.name != "index.html" and page.name contains ".html" -%}
-    {%- assign is_subsite = (page.name == "index.md" or page.name == "index.html")
-    and dir_parts.size == 1
+    {%- assign dir_parts = page.path | split: "/" | reject: "" -%}
+    {%- assign is_html_root = dir_parts.size == 1 and page.name != "index.html" and page.name contains ".html" -%}
+    {%- assign is_subsite = dir_parts.size == 2 and (page.name == "index.md" or page.name == "index.html")
     and dir_parts[0] != "assets"
     and dir_parts[0] != "_site"
     and dir_parts[0] != "_layouts"
