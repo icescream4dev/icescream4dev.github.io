@@ -18,9 +18,10 @@ Ce site est dédié à la devise d’Horace, qui résume l’ambition de toute �
 <ul>
 {% assign categories = site.pages | map: "dir" | uniq | sort %}
 {% for cat in categories %}
-  {% unless cat == "/" or cat contains "_site" or cat contains "_layouts" or cat contains "_includes" or cat contains "_sass" %}
+  {% assign cat_name = cat | split: '/' | last %}
+  {% unless cat == "/" or cat contains "_site" or cat contains "_layouts" or cat contains "_includes" or cat contains "_sass" or cat contains "assets" or cat_name == "" %}
     <li>
-      <strong>{{ cat | remove: "/" | capitalize }}</strong>
+      <strong>{{ cat_name | capitalize }}</strong>
       <ul>
         {% assign articles = site.pages | where: "dir", cat | sort: "title" %}
         {% for article in articles %}
