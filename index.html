@@ -12,11 +12,15 @@ layout: default
 
 <body>
   <h1>Pages disponibles</h1>
-<ul>
-  {%- for page in site.pages -%}
+  <ul>
+    {%- for page in site.pages -%}
     {%- assign dir_parts = page.path | split: "/" | reject: "" -%}
-    {%- assign is_html_root = dir_parts.size == 1 and page.name != "index.html" and page.name contains ".html" -%}
-    {%- assign is_subsite = dir_parts.size == 2 and (page.name == "index.md" or page.name == "index.html")
+    <li>
+      <strong>{{ page.path }}</strong><br>
+      dir_parts = [{{ dir_parts | join: ", " }}]<br>
+      {%- if dir_parts.size == 1 and page.name != "index.html" and page.name contains ".html" -%}
+      <span style="color:green;">→ Lien racine : <a href="{{ page.url }}">{{ page.name }}</a></span>
+      {%- elsif dir_parts.size == 2 and (page.name == "index.md" or page.name == "index.html")
       and dir_parts[0] != "assets"
       and dir_parts[0] != "_site"
       and dir_parts[0] != "_layouts"
@@ -24,20 +28,12 @@ layout: default
       and dir_parts[0] != "_sass"
       and dir_parts[0] != "vendor"
       and dir_parts[0] != "node_modules"
-    -%}
-    <li>
-      <strong>{{ page.path }}</strong><br>
-      dir_parts = [{{ dir_parts | join: ", " }}]<br>
-      is_html_root = {{ is_html_root }}<br>
-      is_subsite = {{ is_subsite }}<br>
-      {%- if is_html_root -%}
-        <span style="color:green;">→ Lien racine : <a href="{{ page.url }}">{{ page.name }}</a></span>
-      {%- elsif is_subsite -%}
-        <span style="color:blue;">→ Sous-site : <a href="{{ page.url }}">{{ dir_parts[0] | capitalize }}</a></span>
+      -%}
+      <span style="color:blue;">→ Sous-site : <a href="{{ page.url }}">{{ dir_parts[0] | capitalize }}</a></span>
       {%- endif -%}
     </li>
-  {%- endfor -%}
-</ul>
+    {%- endfor -%}
+  </ul>
 </body>
 
 </html>
